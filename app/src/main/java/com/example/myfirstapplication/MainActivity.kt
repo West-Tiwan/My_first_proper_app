@@ -27,9 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.myfirstapplication.ui.theme.MyFirstApplicationTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +64,14 @@ fun AppNavigator(modifier: Modifier) {
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) {
         padding -> NavHost(navController, startDestination = "login", modifier = modifier.padding(padding)) {
-            composable("home") { Home(navController) }
+            composable(
+                "home/{email}",
+                arguments = listOf(navArgument("email") {type = NavType.StringType})
+            ) {
+                backStackEntry ->
+                val email = backStackEntry.arguments?.getString("email") ?: ""
+                Home(navController, email)
+            }
             composable("profile") { Profile(navController) }
             composable("login") { Login(navController, snackbarHostState, scope) }
         }
@@ -78,7 +87,7 @@ fun Login (navController: NavController, snackbarHostState: SnackbarHostState, s
     val isEmailValid = email.contains("@") && email.isNotEmpty()
     val isPassValid = pass.length > 6
     val isFormValid = isPassValid && isEmailValid
-        Column (
+    Column (
             modifier = Modifier.padding(20.dp).fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -110,7 +119,7 @@ fun Login (navController: NavController, snackbarHostState: SnackbarHostState, s
                     //put scope in a place where it wont be removed on page change
                     scope.launch {
                         snackbarHostState.showSnackbar("Login successful")
-                        navController.navigate("home") {
+                        navController.navigate("home/$email") {
                             //prevent user from going back to login screen
                             popUpTo("login") {
                                 inclusive = true
@@ -127,13 +136,13 @@ fun Login (navController: NavController, snackbarHostState: SnackbarHostState, s
 }
 
 @Composable
-fun Home(navController: NavController) {
+fun Home(navController: NavController, email: String) {
     fun handleClick () {
         navController.navigate("profile")
     }
 
     Column {
-        Text(text = "Welcome to home")
+        Text(text = "Welcome $email")
         Spacer(modifier = Modifier.padding(20.dp))
         Button(onClick = { handleClick() }) {
             Text(text = "go to profile")

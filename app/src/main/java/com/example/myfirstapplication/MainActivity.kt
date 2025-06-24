@@ -6,10 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -26,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -88,7 +92,9 @@ fun Login (navController: NavController, snackbarHostState: SnackbarHostState, s
     val isPassValid = pass.length > 6
     val isFormValid = isPassValid && isEmailValid
     Column (
-            modifier = Modifier.padding(20.dp).fillMaxSize(),
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -151,14 +157,25 @@ fun Home(navController: NavController, email: String) {
 }
 
 @Composable
-fun Profile(navController: NavController) {
+fun Profile(navController: NavController, viewModel: CoinViewModel = viewModel()) {
+
     fun handleClick () {
         navController.popBackStack()
     }
 
-    Column {
-        Text(text = "Welcome to profile")
-        Spacer(modifier = Modifier.padding(20.dp))
+    if (viewModel.loading) {
+        Text( text = "loading...")
+    } else if(viewModel.error != null) {
+        Text(text = "Error: ${viewModel.error}")
+    } else {
+        LazyColumn {
+            items(viewModel.coins) { coin ->
+                Row(modifier = Modifier.padding(16.dp)) {
+                    Text(text = coin.name)
+                    Text(text = "₹${coin.current_price}")
+                }
+            }
+        }
         Button(onClick = { handleClick() }) {
             Text(text = "go to home")
         }
